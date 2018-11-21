@@ -18,7 +18,11 @@ public class BlockchainService {
     @Autowired
     EncryptService encryptService;
 
-    public boolean isValidNewBlock(Block newBlock, Block previousBlock) throws NoSuchAlgorithmException {
+    public List<Block> getBlockchain() {
+        return this.blockchain;
+    }
+
+    private boolean isValidNewBlock(Block newBlock, Block previousBlock) throws NoSuchAlgorithmException {
         if (previousBlock.getIndex() + 1 != newBlock.getIndex()) {
             System.out.println("Invalid index");
             return false;
@@ -37,11 +41,29 @@ public class BlockchainService {
         return true;
     }
 
-    public void replaceChain(List<Block> newBlocks) {
-
+    private void replaceChain(List<Block> newBlocks) {
+        if (isValidChain(newBlocks) && newBlocks.size() > blockchain.size()) {
+            System.out.println("Recived new valid blockchain");
+            blockchain = newBlocks;
+            // broadcast
+        } else {
+            System.out.println("Recived invalid blockchain");
+        }
     }
 
-    public Block genarateNextBlock(Object blockData) throws NoSuchAlgorithmException {
+    private boolean isValidChain(List<Block> blocks) {
+        boolean output = true;
+        for (int i = blocks.size() - 1; i > 1; i--) {
+            if (!blocks.get(i).getPreviousHash().equals(blocks.get(i - 1).getHash())) {
+                output = false;
+            } else {
+                output = output && true;
+            }
+        }
+        return output;
+    }
+
+    private Block genarateNextBlock(Object blockData) throws NoSuchAlgorithmException {
         Block previousBlock = getLatestBlock();
         Integer nextIndex = previousBlock.getIndex();
         Long nextTimestamp = new Date().getTime() / 1000;
@@ -49,11 +71,11 @@ public class BlockchainService {
         return new Block(nextIndex, previousBlock.getHash(), nextTimestamp, blockData, nextHash.toString());
     }
 
-    public Block getGenesisBlock() {
+    private Block getGenesisBlock() {
         return new Block(0, "0", new Date().getTime() / 1000, "My fucking new block", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
     }
 
-    public Block getLatestBlock() {
+    private Block getLatestBlock() {
         return blockchain.get(blockchain.size() - 1);
     }
 
